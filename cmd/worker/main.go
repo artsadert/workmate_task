@@ -7,6 +7,8 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"gitlab.com/digineat/go-broker-test/internal/infrastructure/db/sqlite"
+	"gitlab.com/digineat/go-broker-test/internal/interface/worker"
 )
 
 func main() {
@@ -22,18 +24,17 @@ func main() {
 	}
 	defer db.Close()
 
+	if err := sqlite.Init_db(db); err != nil {
+		log.Fatalf("Failed to create DB: %v", err)
+	}
 	// Test database connection
 	if err := db.Ping(); err != nil {
 		log.Fatalf("Failed to ping database: %v", err)
 	}
 
 	log.Printf("Worker started with polling interval: %v", *pollInterval)
+	worker := worker.NewWorker(db, *pollInterval)
 
 	// Main worker loop
-	for {
-		// TODO: Write code here
-		
-		// Sleep for the specified interval
-		time.Sleep(*pollInterval)
-	}
+	worker.Run()
 }

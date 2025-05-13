@@ -8,6 +8,8 @@ import (
 	"net/http"
 
 	_ "github.com/mattn/go-sqlite3"
+	"gitlab.com/digineat/go-broker-test/internal/infrastructure/db/sqlite"
+	"gitlab.com/digineat/go-broker-test/internal/interface/api/rest"
 )
 
 func main() {
@@ -23,33 +25,17 @@ func main() {
 	}
 	defer db.Close()
 
+	if err := sqlite.Init_db(db); err != nil {
+		log.Fatalf("Failed to create DB: %v", err)
+	}
+
 	// Test database connection
 	if err := db.Ping(); err != nil {
 		log.Fatalf("Failed to ping database: %v", err)
 	}
 
 	// Initialize HTTP server
-	mux := http.NewServeMux()
-
-	// POST /trades endpoint
-	mux.HandleFunc("POST /trades", func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Write code here
-		w.WriteHeader(http.StatusOK)
-	})
-
-	// GET /stats/{acc} endpoint
-	mux.HandleFunc("GET /stats/{acc}", func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Write code here
-		w.WriteHeader(http.StatusOK)
-	})
-
-	// GET /healthz endpoint
-	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Write code here
-		// 1. Check database connection
-		// 2. Return health status
-		w.WriteHeader(http.StatusOK)
-	})
+	mux := rest.NewHandler(db)
 
 	// Start server
 	serverAddr := fmt.Sprintf(":%s", *listenAddr)
